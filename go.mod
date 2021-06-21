@@ -1,4 +1,4 @@
-module github.com/giantswarm/template-operator
+module github.com/giantswarm/cluster-api-provider-kvm
 
 go 1.14
 

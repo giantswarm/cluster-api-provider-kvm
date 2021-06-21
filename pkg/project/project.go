@@ -1,10 +1,10 @@
 package project
 
 var (
-	description = "The template-operator does something."
+	description = "The cluster-api-provider-kvm does something."
 	gitSHA      = "n/a"
-	name        = "template-operator"
-	source      = "https://github.com/giantswarm/template-operator"
+	name        = "cluster-api-provider-kvm"
+	source      = "https://github.com/giantswarm/cluster-api-provider-kvm"
 	version     = "0.1.0-dev"
 )
 
