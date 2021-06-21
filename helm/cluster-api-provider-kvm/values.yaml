@@ -1,5 +1,5 @@
 image:
-  name: "giantswarm/template-operator"
+  name: "giantswarm/cluster-api-provider-kvm"
   tag: "[[ .Version ]]"
 Installation:
   V1:
