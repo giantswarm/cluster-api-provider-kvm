@@ -1,0 +1,243 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.4.1
+  creationTimestamp: null
+  name: kvmmachinetemplates.provider.giantswarm.io
+spec:
+  group: provider.giantswarm.io
+  names:
+    categories:
+    - giantswarm
+    - kvm
+    - cluster-api
+    kind: KVMMachineTemplate
+    listKind: KVMMachineTemplateList
+    plural: kvmmachinetemplates
+    shortNames:
+    - kvmmt
+    singular: kvmmachinetemplate
+  scope: Namespaced
+  versions:
+  - name: v1alpha4
+    schema:
+      openAPIV3Schema:
+        description: KVMMachineTemplate is the Schema for the kvmmachinetemplates
+          API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: KVMMachineTemplateSpec defines the desired state of KVMMachineTemplate
+            properties:
+              template:
+                description: KVMMachineTemplateResource describes the data needed
+                  to create am KVMMachine from a template
+                properties:
+                  spec:
+                    description: Spec is the specification of the desired behavior
+                      of the machine.
+                    properties:
+                      dockerNetwork:
+                        description: DockerNetwork defines the network configuration
+                          to be used for the docker daemon.
+                        properties:
+                          cidr:
+                            description: CIDR is the subnet to be used by the docker
+                              bridge network on each machine.
+                            type: string
+                        required:
+                        - cidr
+                        type: object
+                      hostPodRef:
+                        description: HostPodRef is a reference to the pod in which
+                          the virtual machine is running.
+                        properties:
+                          apiVersion:
+                            description: API version of the referent.
+                            type: string
+                          fieldPath:
+                            description: 'If referring to a piece of an object instead
+                              of an entire object, this string should contain a valid
+                              JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                              For example, if the object reference is to a container
+                              within a pod, this would take on a value like: "spec.containers{name}"
+                              (where "name" refers to the name of the container that
+                              triggered the event) or if no container name is specified
+                              "spec.containers[2]" (container with index 2 in this
+                              pod). This syntax is chosen only to have some well-defined
+                              way of referencing a part of an object. TODO: this design
+                              is not final and this field is subject to change in
+                              the future.'
+                            type: string
+                          kind:
+                            description: 'Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                            type: string
+                          name:
+                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                            type: string
+                          namespace:
+                            description: 'Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/'
+                            type: string
+                          resourceVersion:
+                            description: 'Specific resourceVersion to which this reference
+                              is made, if any. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency'
+                            type: string
+                          uid:
+                            description: 'UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids'
+                            type: string
+                        type: object
+                      hostVolumes:
+                        description: HostVolumes defines the host volumes (PV) to
+                          be mounted into the workload cluster machine.
+                        items:
+                          properties:
+                            hostPath:
+                              description: HostPath is the path of the directory in
+                                the management cluster machine to be mounted into
+                                the workload cluster machine.
+                              minLength: 1
+                              type: string
+                            mountTag:
+                              description: MountTag is the value of the mount tag
+                                label which will be used to select the PV to mount
+                                to the machine.
+                              maxLength: 31
+                              minLength: 1
+                              type: string
+                          required:
+                          - hostPath
+                          - mountTag
+                          type: object
+                        nullable: true
+                        type: array
+                      providerID:
+                        description: ProviderID is the unique identifier of the machine
+                          assigned by the provider.
+                        type: string
+                      resourceRequirements:
+                        description: ResourceRequirements defines the compute and
+                          storage requirements of the machine.
+                        properties:
+                          cpu:
+                            anyOf:
+                            - type: integer
+                            - type: string
+                            description: CPU is the amount of CPU (whole or partial)
+                              reserved for the virtual machine.
+                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                            x-kubernetes-int-or-string: true
+                          disk:
+                            anyOf:
+                            - type: integer
+                            - type: string
+                            description: Disk is the amount of disk storage reserved
+                              for the virtual machine.
+                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                            x-kubernetes-int-or-string: true
+                          dockerVolumeSize:
+                            anyOf:
+                            - type: integer
+                            - type: string
+                            description: DockerVolumeSize is the size of the docker
+                              volume used for for the virtual machine container.
+                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                            x-kubernetes-int-or-string: true
+                          memory:
+                            anyOf:
+                            - type: integer
+                            - type: string
+                            description: Memory is the amount of memory reserved for
+                              the virtual machine.
+                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                            x-kubernetes-int-or-string: true
+                        required:
+                        - cpu
+                        - disk
+                        - dockerVolumeSize
+                        - memory
+                        type: object
+                      users:
+                        description: Users is the list of users to be configured in
+                          the machine's operating system.
+                        items:
+                          description: User defines the input for a generated user
+                            in cloud-init.
+                          properties:
+                            gecos:
+                              description: Gecos specifies the gecos to use for the
+                                user
+                              type: string
+                            groups:
+                              description: Groups specifies the additional groups
+                                for the user
+                              type: string
+                            homeDir:
+                              description: HomeDir specifies the home directory to
+                                use for the user
+                              type: string
+                            inactive:
+                              description: Inactive specifies whether to mark the
+                                user as inactive
+                              type: boolean
+                            lockPassword:
+                              description: LockPassword specifies if password login
+                                should be disabled
+                              type: boolean
+                            name:
+                              description: Name specifies the user name
+                              type: string
+                            passwd:
+                              description: Passwd specifies a hashed password for
+                                the user
+                              type: string
+                            primaryGroup:
+                              description: PrimaryGroup specifies the primary group
+                                for the user
+                              type: string
+                            shell:
+                              description: Shell specifies the user's shell
+                              type: string
+                            sshAuthorizedKeys:
+                              description: SSHAuthorizedKeys specifies a list of ssh
+                                authorized keys for the user
+                              items:
+                                type: string
+                              type: array
+                            sudo:
+                              description: Sudo specifies a sudo role for the user
+                              type: string
+                          required:
+                          - name
+                          type: object
+                        nullable: true
+                        type: array
+                    type: object
+                required:
+                - spec
+                type: object
+            required:
+            - template
+            type: object
+        type: object
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

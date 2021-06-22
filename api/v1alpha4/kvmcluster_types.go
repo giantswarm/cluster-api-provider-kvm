@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha1
+package v1alpha4
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -26,19 +26,6 @@ type KVMClusterSpec struct {
 	// ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.
 	// +optional
 	ControlPlaneEndpoint clusterv1.APIEndpoint `json:"controlPlaneEndpoint"`
-
-	// CalicoNetwork defines the network configuration to be used for Calico CNI.
-	// +optional
-	CalicoNetwork CalicoNetwork `json:"calicoNetwork"`
-
-	// DockerNetwork defines the network configuration to be used for the docker daemon.
-	// +optional
-	DockerNetwork DockerNetwork `json:"dockerNetwork"`
-
-	// UserList is a list of users and SSH keys to be added to each workload cluster machine for SSH access.
-	// +optional
-	// +nullable
-	UserList []SSHUser `json:"userList"`
 }
 
 // KVMClusterStatus defines the observed state of KVMCluster

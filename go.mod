@@ -11,6 +11,7 @@ require (
 	github.com/giantswarm/operatorkit/v4 v4.3.1
 	github.com/prometheus/client_golang v1.11.0
 	github.com/spf13/viper v1.8.0
+	k8s.io/api v0.21.2
 	k8s.io/apimachinery v0.21.2
 	k8s.io/client-go v0.21.2
 	sigs.k8s.io/cluster-api v0.4.0-beta.1

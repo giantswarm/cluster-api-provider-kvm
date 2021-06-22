@@ -14,11 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha1
+package v1alpha4
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha4"
+	"sigs.k8s.io/cluster-api/bootstrap/kubeadm/api/v1alpha4"
 	"sigs.k8s.io/cluster-api/errors"
 )
 
@@ -27,13 +29,25 @@ type KVMMachineSpec struct {
 	// ProviderID is the unique identifier of the machine assigned by the provider.
 	ProviderID *string `json:"providerID,omitempty"`
 
-	// Resources defines the compute and storage requirements of the machine.
-	Resources Resources `json:"resources,omitempty"`
+	// HostPodRef is a reference to the pod in which the virtual machine is running.
+	HostPodRef *corev1.ObjectReference `json:"hostPodRef,omitempty"`
+
+	// DockerNetwork defines the network configuration to be used for the docker daemon.
+	// +optional
+	DockerNetwork DockerNetwork `json:"dockerNetwork"`
+
+	// ResourceRequirements defines the compute and storage requirements of the machine.
+	ResourceRequirements MachineResources `json:"resourceRequirements,omitempty"`
 
 	// HostVolumes defines the host volumes (PV) to be mounted into the workload cluster machine.
 	// +optional
 	// +nullable
 	HostVolumes []HostVolume `json:"hostVolumes,omitempty"`
+
+	// Users is the list of users to be configured in the machine's operating system.
+	// +optional
+	// +nullable
+	Users []v1alpha4.User `json:"users,omitempty"`
 }
 
 // KVMMachineStatus defines the observed state of KVMMachine

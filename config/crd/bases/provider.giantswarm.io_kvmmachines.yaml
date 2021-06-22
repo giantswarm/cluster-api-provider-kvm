@@ -43,7 +43,7 @@ spec:
       jsonPath: .metadata.ownerReferences[?(@.kind=="Machine")].name
       name: Machine
       type: string
-    name: v1alpha1
+    name: v1alpha4
     schema:
       openAPIV3Schema:
         description: KVMMachine is the Schema for the kvmmachines API
@@ -63,6 +63,54 @@ spec:
           spec:
             description: KVMMachineSpec defines the desired state of KVMMachine
             properties:
+              dockerNetwork:
+                description: DockerNetwork defines the network configuration to be
+                  used for the docker daemon.
+                properties:
+                  cidr:
+                    description: CIDR is the subnet to be used by the docker bridge
+                      network on each machine.
+                    type: string
+                required:
+                - cidr
+                type: object
+              hostPodRef:
+                description: HostPodRef is a reference to the pod in which the virtual
+                  machine is running.
+                properties:
+                  apiVersion:
+                    description: API version of the referent.
+                    type: string
+                  fieldPath:
+                    description: 'If referring to a piece of an object instead of
+                      an entire object, this string should contain a valid JSON/Go
+                      field access statement, such as desiredState.manifest.containers[2].
+                      For example, if the object reference is to a container within
+                      a pod, this would take on a value like: "spec.containers{name}"
+                      (where "name" refers to the name of the container that triggered
+                      the event) or if no container name is specified "spec.containers[2]"
+                      (container with index 2 in this pod). This syntax is chosen
+                      only to have some well-defined way of referencing a part of
+                      an object. TODO: this design is not final and this field is
+                      subject to change in the future.'
+                    type: string
+                  kind:
+                    description: 'Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                    type: string
+                  name:
+                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                    type: string
+                  namespace:
+                    description: 'Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/'
+                    type: string
+                  resourceVersion:
+                    description: 'Specific resourceVersion to which this reference
+                      is made, if any. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency'
+                    type: string
+                  uid:
+                    description: 'UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids'
+                    type: string
+                type: object
               hostVolumes:
                 description: HostVolumes defines the host volumes (PV) to be mounted
                   into the workload cluster machine.
@@ -89,9 +137,9 @@ spec:
                 description: ProviderID is the unique identifier of the machine assigned
                   by the provider.
                 type: string
-              resources:
-                description: Resources defines the compute and storage requirements
-                  of the machine.
+              resourceRequirements:
+                description: ResourceRequirements defines the compute and storage
+                  requirements of the machine.
                 properties:
                   cpu:
                     anyOf:
@@ -113,8 +161,8 @@ spec:
                     anyOf:
                     - type: integer
                     - type: string
-                    description: Disk is the size of the docker volume used for for
-                      the virtual machine container.
+                    description: DockerVolumeSize is the size of the docker volume
+                      used for for the virtual machine container.
                     pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                     x-kubernetes-int-or-string: true
                   memory:
@@ -131,6 +179,58 @@ spec:
                 - dockerVolumeSize
                 - memory
                 type: object
+              users:
+                description: Users is the list of users to be configured in the machine's
+                  operating system.
+                items:
+                  description: User defines the input for a generated user in cloud-init.
+                  properties:
+                    gecos:
+                      description: Gecos specifies the gecos to use for the user
+                      type: string
+                    groups:
+                      description: Groups specifies the additional groups for the
+                        user
+                      type: string
+                    homeDir:
+                      description: HomeDir specifies the home directory to use for
+                        the user
+                      type: string
+                    inactive:
+                      description: Inactive specifies whether to mark the user as
+                        inactive
+                      type: boolean
+                    lockPassword:
+                      description: LockPassword specifies if password login should
+                        be disabled
+                      type: boolean
+                    name:
+                      description: Name specifies the user name
+                      type: string
+                    passwd:
+                      description: Passwd specifies a hashed password for the user
+                      type: string
+                    primaryGroup:
+                      description: PrimaryGroup specifies the primary group for the
+                        user
+                      type: string
+                    shell:
+                      description: Shell specifies the user's shell
+                      type: string
+                    sshAuthorizedKeys:
+                      description: SSHAuthorizedKeys specifies a list of ssh authorized
+                        keys for the user
+                      items:
+                        type: string
+                      type: array
+                    sudo:
+                      description: Sudo specifies a sudo role for the user
+                      type: string
+                  required:
+                  - name
+                  type: object
+                nullable: true
+                type: array
             type: object
           status:
             description: KVMMachineStatus defines the observed state of KVMMachine

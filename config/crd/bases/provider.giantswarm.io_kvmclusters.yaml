@@ -36,7 +36,7 @@ spec:
       name: Endpoint
       priority: 1
       type: string
-    name: v1alpha1
+    name: v1alpha4
     schema:
       openAPIV3Schema:
         description: KVMCluster is the Schema for the kvmclusters API
@@ -56,26 +56,6 @@ spec:
           spec:
             description: KVMClusterSpec defines the desired state of KVMCluster
             properties:
-              calicoNetwork:
-                description: CalicoNetwork defines the network configuration to be
-                  used for Calico CNI.
-                properties:
-                  cidr:
-                    description: CIDR is the width (in bits) of the network prefix
-                      of the Calico subnet.
-                    type: integer
-                  mtu:
-                    description: MTU is the maximum transmission unit of the Calico
-                      network.
-                    type: integer
-                  subnet:
-                    description: Subnet is the first IP address of the Calico subnet.
-                    type: string
-                required:
-                - cidr
-                - mtu
-                - subnet
-                type: object
               controlPlaneEndpoint:
                 description: ControlPlaneEndpoint represents the endpoint used to
                   communicate with the control plane.
@@ -91,32 +71,6 @@ spec:
                 - host
                 - port
                 type: object
-              dockerNetwork:
-                description: DockerNetwork defines the network configuration to be
-                  used for the docker daemon.
-                properties:
-                  cidr:
-                    description: CIDR is the subnet to be used by the docker bridge
-                      network on each machine.
-                    type: string
-                required:
-                - cidr
-                type: object
-              userList:
-                description: UserList is a list of users and SSH keys to be added
-                  to each workload cluster machine for SSH access.
-                items:
-                  properties:
-                    name:
-                      type: string
-                    publicKey:
-                      type: string
-                  required:
-                  - name
-                  - publicKey
-                  type: object
-                nullable: true
-                type: array
             type: object
           status:
             description: KVMClusterStatus defines the observed state of KVMCluster
