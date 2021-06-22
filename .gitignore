@@ -1,4 +1,1 @@
-*.swp
-TODO
-/cluster-api-provider-kvm
-!vendor/**
+/bin
