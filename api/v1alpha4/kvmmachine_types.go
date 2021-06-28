@@ -17,7 +17,6 @@ limitations under the License.
 package v1alpha4
 
 import (
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha4"
 	"sigs.k8s.io/cluster-api/errors"
@@ -27,13 +26,6 @@ import (
 type KVMMachineSpec struct {
 	// ProviderID is the unique identifier of the machine assigned by the provider.
 	ProviderID *string `json:"providerID,omitempty"`
-
-	// HostPodRef is a reference to the pod in which the virtual machine is running.
-	HostPodRef *corev1.ObjectReference `json:"hostPodRef,omitempty"`
-
-	// DockerNetwork defines the network configuration to be used for the docker daemon.
-	// +optional
-	DockerNetwork DockerNetwork `json:"dockerNetwork"`
 
 	// ResourceRequirements defines the compute and storage requirements of the machine.
 	ResourceRequirements MachineResources `json:"resourceRequirements,omitempty"`

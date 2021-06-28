@@ -21,7 +21,6 @@ limitations under the License.
 package v1alpha4
 
 import (
-	v1 "k8s.io/api/core/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	apiv1alpha4 "sigs.k8s.io/cluster-api/api/v1alpha4"
 	"sigs.k8s.io/cluster-api/errors"
@@ -221,12 +220,6 @@ func (in *KVMMachineSpec) DeepCopyInto(out *KVMMachineSpec) {
 		*out = new(string)
 		**out = **in
 	}
-	if in.HostPodRef != nil {
-		in, out := &in.HostPodRef, &out.HostPodRef
-		*out = new(v1.ObjectReference)
-		**out = **in
-	}
-	out.DockerNetwork = in.DockerNetwork
 	in.ResourceRequirements.DeepCopyInto(&out.ResourceRequirements)
 	if in.HostVolumes != nil {
 		in, out := &in.HostVolumes, &out.HostVolumes
