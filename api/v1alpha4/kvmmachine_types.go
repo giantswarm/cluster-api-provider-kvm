@@ -20,7 +20,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha4"
-	"sigs.k8s.io/cluster-api/bootstrap/kubeadm/api/v1alpha4"
 	"sigs.k8s.io/cluster-api/errors"
 )
 
@@ -43,11 +42,6 @@ type KVMMachineSpec struct {
 	// +optional
 	// +nullable
 	HostVolumes []HostVolume `json:"hostVolumes,omitempty"`
-
-	// Users is the list of users to be configured in the machine's operating system.
-	// +optional
-	// +nullable
-	Users []v1alpha4.User `json:"users,omitempty"`
 }
 
 // KVMMachineStatus defines the observed state of KVMMachine
