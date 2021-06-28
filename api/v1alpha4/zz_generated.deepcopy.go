@@ -21,10 +21,9 @@ limitations under the License.
 package v1alpha4
 
 import (
-	v1 "k8s.io/api/core/v1"
+	"k8s.io/api/core/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	apiv1alpha4 "sigs.k8s.io/cluster-api/api/v1alpha4"
-	kubeadmapiv1alpha4 "sigs.k8s.io/cluster-api/bootstrap/kubeadm/api/v1alpha4"
 	"sigs.k8s.io/cluster-api/errors"
 )
 
@@ -233,13 +232,6 @@ func (in *KVMMachineSpec) DeepCopyInto(out *KVMMachineSpec) {
 		in, out := &in.HostVolumes, &out.HostVolumes
 		*out = make([]HostVolume, len(*in))
 		copy(*out, *in)
-	}
-	if in.Users != nil {
-		in, out := &in.Users, &out.Users
-		*out = make([]kubeadmapiv1alpha4.User, len(*in))
-		for i := range *in {
-			(*in)[i].DeepCopyInto(&(*out)[i])
-		}
 	}
 }
 
