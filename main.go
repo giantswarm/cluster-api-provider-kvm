@@ -1,117 +1,128 @@
+/*
+Copyright 2021.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package main
 
 import (
-	"context"
+	"flag"
+	"os"
 
-	"github.com/giantswarm/microerror"
-	"github.com/giantswarm/microkit/command"
-	microserver "github.com/giantswarm/microkit/server"
-	"github.com/giantswarm/micrologger"
-	"github.com/spf13/viper"
-
-	"github.com/giantswarm/cluster-api-provider-kvm/flag"
-	"github.com/giantswarm/cluster-api-provider-kvm/pkg/project"
-	"github.com/giantswarm/cluster-api-provider-kvm/server"
-	"github.com/giantswarm/cluster-api-provider-kvm/service"
+	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
+	// to ensure that exec-entrypoint and run can make use of them.
+	"github.com/spf13/pflag"
+	"k8s.io/apimachinery/pkg/runtime"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
+	"k8s.io/klog/klogr"
+	"k8s.io/klog/v2"
+	"sigs.k8s.io/cluster-api/feature"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/healthz"
+	//+kubebuilder:scaffold:imports
 )
 
 var (
-	f *flag.Flag = flag.New()
+	scheme   = runtime.NewScheme()
+	setupLog = ctrl.Log.WithName("setup")
+)
+
+func init() {
+	klog.InitFlags(nil)
+
+	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
+
+	//+kubebuilder:scaffold:scheme
+}
+
+var (
+	metricsAddr          string
+	enableLeaderElection bool
+	probeAddr            string
 )
 
 func main() {
-	err := mainE(context.Background())
+
+	initFlags(pflag.CommandLine)
+	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
+	pflag.Parse()
+
+	ctrl.SetLogger(klogr.New())
+
+	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+		Scheme:                 scheme,
+		MetricsBindAddress:     metricsAddr,
+		Port:                   9443,
+		HealthProbeBindAddress: probeAddr,
+		LeaderElection:         enableLeaderElection,
+		LeaderElectionID:       "a0acdc7d.infrastructure.cluster.x-k8s.io",
+	})
 	if err != nil {
-		panic(microerror.JSON(err))
+		setupLog.Error(err, "unable to start manager")
+		os.Exit(1)
+	}
+
+	//+kubebuilder:scaffold:builder
+
+	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
+		setupLog.Error(err, "unable to set up health check")
+		os.Exit(1)
+	}
+	if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
+		setupLog.Error(err, "unable to set up ready check")
+		os.Exit(1)
+	}
+
+	setupLog.Info("starting manager")
+	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
+		setupLog.Error(err, "problem running manager")
+		os.Exit(1)
 	}
 }
 
-func mainE(ctx context.Context) error {
-	var err error
+// initFlags initializes all command-line flags.
+func initFlags(fs *pflag.FlagSet) {
+	fs.StringVar(
+		&metricsAddr,
+		"metrics-bind-address",
+		":8080",
+		"The address the metric endpoint binds to.",
+	)
 
-	var logger micrologger.Logger
-	{
-		c := micrologger.Config{}
+	fs.BoolVar(
+		&enableLeaderElection,
+		"leader-elect",
+		false,
+		"Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager.",
+	)
 
-		logger, err = micrologger.New(c)
-		if err != nil {
-			return microerror.Mask(err)
-		}
-	}
+	fs.StringVar(
+		&probeAddr,
+		"health-probe-bind-address",
+		":8081",
+		"The address the probe endpoint binds to.",
+	)
 
-	// We define a server factory to create the custom server once all command
-	// line flags are parsed and all microservice configuration is storted out.
-	serverFactory := func(v *viper.Viper) microserver.Server {
-		// Create a new custom service which implements business logic.
-		var newService *service.Service
-		{
-			c := service.Config{
-				Logger: logger,
+	fs.BoolVar(
+		&enableLeaderElection,
+		"leader-elect",
+		false,
+		"Enable leader election for controller manager. "+
+			"Enabling this will ensure there is only one active controller manager.",
+	)
 
-				Flag:  f,
-				Viper: v,
-			}
-
-			newService, err = service.New(c)
-			if err != nil {
-				panic(microerror.JSON(err))
-			}
-
-			go newService.Boot(ctx)
-		}
-
-		// Create a new custom server which bundles our endpoints.
-		var newServer microserver.Server
-		{
-			c := server.Config{
-				Logger:  logger,
-				Service: newService,
-
-				Viper: v,
-			}
-
-			newServer, err = server.New(c)
-			if err != nil {
-				panic(microerror.JSON(err))
-			}
-		}
-
-		return newServer
-	}
-
-	// Create a new microkit command which manages our custom microservice.
-	var newCommand command.Command
-	{
-		c := command.Config{
-			Logger:        logger,
-			ServerFactory: serverFactory,
-
-			Description: project.Description(),
-			GitCommit:   project.GitSHA(),
-			Name:        project.Name(),
-			Source:      project.Source(),
-			Version:     project.Version(),
-		}
-
-		newCommand, err = command.New(c)
-		if err != nil {
-			return microerror.Mask(err)
-		}
-	}
-
-	daemonCommand := newCommand.DaemonCommand().CobraCommand()
-
-	daemonCommand.PersistentFlags().String(f.Service.Kubernetes.Address, "http://127.0.0.1:6443", "Address used to connect to Kubernetes. When empty in-cluster config is created.")
-	daemonCommand.PersistentFlags().Bool(f.Service.Kubernetes.InCluster, false, "Whether to use the in-cluster config to authenticate with Kubernetes.")
-	daemonCommand.PersistentFlags().String(f.Service.Kubernetes.KubeConfig, "", "KubeConfig used to connect to Kubernetes. When empty other settings are used.")
-	daemonCommand.PersistentFlags().String(f.Service.Kubernetes.TLS.CAFile, "", "Certificate authority file path to use to authenticate with Kubernetes.")
-	daemonCommand.PersistentFlags().String(f.Service.Kubernetes.TLS.CrtFile, "", "Certificate file path to use to authenticate with Kubernetes.")
-	daemonCommand.PersistentFlags().String(f.Service.Kubernetes.TLS.KeyFile, "", "Key file path to use to authenticate with Kubernetes.")
-
-	err = newCommand.CobraCommand().Execute()
-	if err != nil {
-		return microerror.Mask(err)
-	}
-
-	return nil
+	feature.MutableGates.AddFlag(fs)
 }
