@@ -21,22 +21,30 @@ import (
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/cluster-api/util/annotations"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	"github.com/giantswarm/cluster-api-provider-kvm/api/v1alpha4"
+	"github.com/giantswarm/cluster-api-provider-kvm/pkg/kvm/metrics"
 	"github.com/giantswarm/cluster-api-provider-kvm/pkg/kvm/scope"
-	"github.com/giantswarm/cluster-api-provider-kvm/pkg/services/namespace"
+	"github.com/giantswarm/cluster-api-provider-kvm/pkg/kvm/services/namespace"
 	"github.com/pkg/errors"
+)
+
+const (
+	KVMClusterController = "kvmcluster"
 )
 
 // KVMClusterReconciler reconciles a KVMCluster object
 type KVMClusterReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Recorder record.EventRecorder
+	Scheme   *runtime.Scheme
 }
 
 //+kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io.infrastructure.cluster.x-k8s.io,resources=kvmclusters,verbs=get;list;watch;create;update;patch;delete
@@ -52,8 +60,10 @@ type KVMClusterReconciler struct {
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
-func (r *KVMClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (_ ctrl.Result, reterr error) {
+func (r *KVMClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (_ ctrl.Result, reconcileError error) {
 	log := ctrl.LoggerFrom(ctx)
+
+	defer metrics.CaptureLastReconciled()
 
 	// Fetch the KVMCluster instance
 	kvmCluster := &v1alpha4.KVMCluster{}
@@ -64,6 +74,12 @@ func (r *KVMClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		}
 		return reconcile.Result{}, err
 	}
+
+	defer func() {
+		if reconcileError != nil {
+			r.Recorder.Event(kvmCluster, "Warning", "failed-to-reconcile", reconcileError.Error())
+		}
+	}()
 
 	// Fetch the Cluster.
 	cluster, err := util.GetOwnerCluster(ctx, r.Client, kvmCluster.ObjectMeta)
@@ -77,7 +93,7 @@ func (r *KVMClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	}
 
 	if annotations.IsPaused(cluster, kvmCluster) {
-		log.Info("AWSCluster or linked Cluster is marked as paused. Won't reconcile")
+		log.Info("KVMCluster or linked Cluster is marked as paused. Won't reconcile")
 		return reconcile.Result{}, nil
 	}
 
@@ -87,7 +103,7 @@ func (r *KVMClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	clusterScope, err := scope.NewClusterScope(scope.ClusterScopeParams{
 		Cluster:        cluster,
 		KVMCluster:     kvmCluster,
-		ControllerName: "kvmcluster",
+		ControllerName: KVMClusterController,
 	})
 	if err != nil {
 		return reconcile.Result{}, errors.Errorf("failed to create scope: %+v", err)
@@ -95,8 +111,8 @@ func (r *KVMClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 	// Always close the scope when exiting this function so we can persist any KVMCluster changes.
 	defer func() {
-		if err := clusterScope.Close(); err != nil && reterr == nil {
-			reterr = err
+		if err := clusterScope.Close(); err != nil && reconcileError == nil {
+			reconcileError = err
 		}
 	}()
 
@@ -112,19 +128,32 @@ func (r *KVMClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 // SetupWithManager sets up the controller with the Manager.
 func (r *KVMClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		// Uncomment the following line adding a pointer to an instance of the controlled resource as an argument
-		// For().
+		For(&v1alpha4.KVMCluster{}).
 		Complete(r)
 }
 
-func (r *KVMClusterReconciler) reconcileNormal(ctx context.Context, scope *scope.ClusterScope) (reconcile.Result, error) {
+func (r *KVMClusterReconciler) reconcileDelete(ctx context.Context, scope *scope.ClusterScope) (_ reconcile.Result, reconcileError error) {
+
 	nsService := namespace.NewService()
-	nsService.ReconcileNamespace()
+	nsService.DeleteNamespace()
+
+	// Cluster is deleted so remove the finalizer.
+	controllerutil.RemoveFinalizer(scope.KVMCluster, v1alpha4.ClusterFinalizer)
+
 	return reconcile.Result{}, nil
 }
 
-func (r *KVMClusterReconciler) reconcileDelete(ctx context.Context, scope *scope.ClusterScope) (reconcile.Result, error) {
+func (r *KVMClusterReconciler) reconcileNormal(ctx context.Context, scope *scope.ClusterScope) (_ reconcile.Result, reconcileError error) {
+
+	// If the KVMCluster doesn't have our finalizer, add it.
+	controllerutil.AddFinalizer(scope.KVMCluster, v1alpha4.ClusterFinalizer)
+
+	// Register the finalizer immediately to avoid orphaning resources on delete
+	if err := scope.PatchObject(); err != nil {
+		return reconcile.Result{}, err
+	}
+
 	nsService := namespace.NewService()
-	nsService.DeleteNamespace()
+	nsService.ReconcileNamespace()
 	return reconcile.Result{}, nil
 }

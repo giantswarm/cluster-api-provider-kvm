@@ -30,6 +30,7 @@ import (
 	"k8s.io/klog/klogr"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/cluster-api/feature"
+	"sigs.k8s.io/cluster-api/util/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 
@@ -77,9 +78,13 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Initialize event recorder.
+	record.InitFromRecorder(mgr.GetEventRecorderFor("kvm-controller"))
+
 	if err = (&controllers.KVMClusterReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Recorder: mgr.GetEventRecorderFor("kvmcluster-controller"),
+		Scheme:   mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "KVMCluster")
 		os.Exit(1)
