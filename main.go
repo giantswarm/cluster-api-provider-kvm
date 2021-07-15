@@ -64,6 +64,7 @@ func main() {
 	pflag.Parse()
 
 	ctrl.SetLogger(klogr.New())
+	ctx := ctrl.SetupSignalHandler()
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
@@ -85,7 +86,8 @@ func main() {
 		Client:   mgr.GetClient(),
 		Recorder: mgr.GetEventRecorderFor("kvmcluster-controller"),
 		Scheme:   mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
+		// WatchFilterValue: "",
+	}).SetupWithManager(ctx, mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "KVMCluster")
 		os.Exit(1)
 	}

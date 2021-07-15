@@ -24,8 +24,10 @@ import (
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/cluster-api/util/annotations"
+	"sigs.k8s.io/cluster-api/util/predicates"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -43,8 +45,9 @@ const (
 // KVMClusterReconciler reconciles a KVMCluster object
 type KVMClusterReconciler struct {
 	client.Client
-	Recorder record.EventRecorder
-	Scheme   *runtime.Scheme
+	Recorder         record.EventRecorder
+	Scheme           *runtime.Scheme
+	WatchFilterValue string
 }
 
 //+kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io.infrastructure.cluster.x-k8s.io,resources=kvmclusters,verbs=get;list;watch;create;update;patch;delete
@@ -63,7 +66,7 @@ type KVMClusterReconciler struct {
 func (r *KVMClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (_ ctrl.Result, reconcileError error) {
 	log := ctrl.LoggerFrom(ctx)
 
-	defer metrics.CaptureLastReconciled()
+	defer metrics.CaptureLastReconciled(KVMClusterController)
 
 	// Fetch the KVMCluster instance
 	kvmCluster := &v1alpha4.KVMCluster{}
@@ -126,9 +129,12 @@ func (r *KVMClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *KVMClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *KVMClusterReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager) error {
+	log := ctrl.LoggerFrom(ctx)
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha4.KVMCluster{}).
+		WithEventFilter(predicates.ResourceNotPausedAndHasFilterLabel(log, r.WatchFilterValue)).
 		Complete(r)
 }
 

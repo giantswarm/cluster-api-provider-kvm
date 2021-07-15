@@ -2,8 +2,6 @@ package metrics
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
-
-	"github.com/giantswarm/cluster-api-provider-kvm/controllers"
 )
 
 const (
@@ -30,6 +28,6 @@ func init() {
 // CaptureLastReconciled will monitor and capture metrics.
 func CaptureLastReconciled(controller string) {
 	lastReconciledGauge.WithLabelValues(
-		controllers.KVMClusterController,
+		controller,
 	).SetToCurrentTime()
 }
