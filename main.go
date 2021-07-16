@@ -72,7 +72,7 @@ func main() {
 		Port:                   9443,
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
-		LeaderElectionID:       "a0acdc7d.infrastructure.cluster.x-k8s.io",
+		LeaderElectionID:       "controller-leader-election-capk",
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
