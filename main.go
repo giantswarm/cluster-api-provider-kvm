@@ -132,13 +132,5 @@ func initFlags(fs *pflag.FlagSet) {
 		"The address the probe endpoint binds to.",
 	)
 
-	fs.BoolVar(
-		&enableLeaderElection,
-		"leader-elect",
-		false,
-		"Enable leader election for controller manager. "+
-			"Enabling this will ensure there is only one active controller manager.",
-	)
-
 	feature.MutableGates.AddFlag(fs)
 }
