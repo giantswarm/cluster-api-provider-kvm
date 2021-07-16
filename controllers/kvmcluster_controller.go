@@ -102,7 +102,7 @@ func (r *KVMClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return reconcile.Result{}, nil
 	}
 
-	log = log.WithValues("cluster", cluster.Name)
+	// log = log.WithValues("cluster", cluster.Name)
 
 	// Create the scope.
 	clusterScope, err := scope.NewClusterScope(scope.ClusterScopeParams{
@@ -143,7 +143,14 @@ func (r *KVMClusterReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Ma
 func (r *KVMClusterReconciler) reconcileDelete(ctx context.Context, scope *scope.ClusterScope) (_ reconcile.Result, reconcileError error) {
 
 	nsService := namespace.NewService()
-	nsService.DeleteNamespace()
+
+	if err := scope.PatchObject(); err != nil {
+		return reconcile.Result{}, err
+	}
+	err := nsService.DeleteNamespace()
+	if err != nil {
+		return reconcile.Result{}, err
+	}
 
 	// Cluster is deleted so remove the finalizer.
 	controllerutil.RemoveFinalizer(scope.KVMCluster, v1alpha4.ClusterFinalizer)
@@ -162,6 +169,9 @@ func (r *KVMClusterReconciler) reconcileNormal(ctx context.Context, scope *scope
 	}
 
 	nsService := namespace.NewService()
-	nsService.ReconcileNamespace()
+	err := nsService.ReconcileNamespace()
+	if err != nil {
+		return reconcile.Result{}, err
+	}
 	return reconcile.Result{}, nil
 }
