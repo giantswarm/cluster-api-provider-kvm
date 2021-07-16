@@ -66,8 +66,6 @@ type KVMClusterReconciler struct {
 func (r *KVMClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (_ ctrl.Result, reconcileError error) {
 	log := ctrl.LoggerFrom(ctx)
 
-	defer metrics.CaptureLastReconciled(KVMClusterController)
-
 	// Fetch the KVMCluster instance
 	kvmCluster := &v1alpha4.KVMCluster{}
 	err := r.Get(ctx, req.NamespacedName, kvmCluster)
@@ -81,7 +79,10 @@ func (r *KVMClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	defer func() {
 		if reconcileError != nil {
 			r.Recorder.Event(kvmCluster, "Warning", "failed-to-reconcile", reconcileError.Error())
+			return
 		}
+
+		metrics.CaptureLastReconciled(KVMClusterController)
 	}()
 
 	// Fetch the Cluster.
