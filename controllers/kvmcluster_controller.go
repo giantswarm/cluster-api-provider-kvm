@@ -31,11 +31,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
+	"github.com/pkg/errors"
+
 	"github.com/giantswarm/cluster-api-provider-kvm/api/v1alpha4"
 	"github.com/giantswarm/cluster-api-provider-kvm/pkg/kvm/metrics"
 	"github.com/giantswarm/cluster-api-provider-kvm/pkg/kvm/scope"
 	"github.com/giantswarm/cluster-api-provider-kvm/pkg/kvm/services/namespace"
-	"github.com/pkg/errors"
 )
 
 const (
