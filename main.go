@@ -34,6 +34,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 
+	"github.com/giantswarm/cluster-api-provider-kvm/api/v1alpha4"
 	"github.com/giantswarm/cluster-api-provider-kvm/controllers"
 	//+kubebuilder:scaffold:imports
 )
@@ -47,6 +48,7 @@ func init() {
 	klog.InitFlags(nil)
 
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
+	utilruntime.Must(v1alpha4.AddToScheme(scheme))
 
 	//+kubebuilder:scaffold:scheme
 }
@@ -103,7 +105,7 @@ func main() {
 	}
 
 	setupLog.Info("starting manager")
-	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
+	if err := mgr.Start(ctx); err != nil {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
