@@ -106,6 +106,7 @@ func (r *KVMClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 	// Create the scope.
 	clusterScope, err := scope.NewClusterScope(scope.ClusterScopeParams{
+		Client:         r.Client,
 		Cluster:        cluster,
 		KVMCluster:     kvmCluster,
 		ControllerName: KVMClusterController,
