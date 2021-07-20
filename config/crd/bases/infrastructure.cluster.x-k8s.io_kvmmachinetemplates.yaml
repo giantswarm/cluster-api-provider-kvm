@@ -6,9 +6,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
   creationTimestamp: null
-  name: kvmmachinetemplates.provider.giantswarm.io
+  name: kvmmachinetemplates.infrastructure.cluster.x-k8s.io
 spec:
-  group: provider.giantswarm.io
+  group: infrastructure.cluster.x-k8s.io
   names:
     categories:
     - giantswarm
