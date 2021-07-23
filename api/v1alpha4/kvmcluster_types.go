@@ -21,6 +21,12 @@ import (
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha4"
 )
 
+const (
+	// ClusterFinalizer allows ReconcileKVMCluster to clean up resources associated with KVMCluster before
+	// removing it from the apiserver.
+	ClusterFinalizer = "kvmcluster.infrastructure.cluster.x-k8s.io"
+)
+
 // KVMClusterSpec defines the desired state of KVMCluster
 type KVMClusterSpec struct {
 	// ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.

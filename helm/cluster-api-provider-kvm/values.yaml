@@ -10,6 +10,9 @@ pod:
     id: 1000
   group:
     id: 1000
+ports:
+  metrics: 8080
+  healthz: 9440
 project:
   branch: "[[ .Branch ]]"
   commit: "[[ .SHA ]]"

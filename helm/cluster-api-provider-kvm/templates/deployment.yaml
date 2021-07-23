@@ -4,6 +4,7 @@ metadata:
   name: {{ include "resource.default.name"  . }}
   namespace: {{ include "resource.default.namespace"  . }}
   labels:
+    control-plane: capa-controller-manager
     {{- include "labels.common" . | nindent 4 }}
 spec:
   replicas: 1
@@ -15,54 +16,37 @@ spec:
   template:
     metadata:
       labels:
-        {{- include "labels.common" . | nindent 8 }}
+        control-plane: capa-controller-manager
+        {{- include "labels.selector" . | nindent 8 }}
       annotations:
         releaseRevision: {{ .Release.Revision | quote }}
     spec:
-      affinity:
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-          - podAffinityTerm:
-              labelSelector:
-                matchLabels:
-                  {{- include "labels.selector" . | nindent 18 }}
-              topologyKey: kubernetes.io/hostname
-            weight: 100
-      volumes:
-      - name: {{ include "name" . }}-configmap
-        configMap:
-          name: {{ include "resource.default.name"  . }}
-          items:
-          - key: config.yaml
-            path: config.yaml
-      - name: {{ include "name" . }}-secret
-        secret:
-          secretName: {{ include "resource.default.name"  . }}
-          items:
-          - key: secret.yaml
-            path: secret.yaml
       serviceAccountName: {{ include "resource.default.name"  . }}
       securityContext:
         runAsUser: {{ .Values.pod.user.id }}
         runAsGroup: {{ .Values.pod.group.id }}
       containers:
-      - name: {{ include "name" . }}
+      - name: manager
         image: "{{ .Values.Installation.V1.Registry.Domain }}/{{ .Values.image.name }}:{{ .Values.image.tag }}"
         args:
-        - daemon
-        - --config.dirs=/var/run/{{ include "name" . }}/configmap/,/var/run/{{ include "name" . }}/secret/
-        - --config.files=config,secret
-        volumeMounts:
-        - name: {{ include "name" . }}-configmap
-          mountPath: /var/run/{{ include "name" . }}/configmap/
-        - name: {{ include "name" . }}-secret
-          mountPath: /var/run/{{ include "name" . }}/secret/
+        - --metrics-bind-address=0.0.0.0:{{ .Values.ports.metrics }}
         livenessProbe:
           httpGet:
             path: /healthz
-            port: 8000
+            port: healhtz
           initialDelaySeconds: 30
           timeoutSeconds: 1
+        ports:
+        - containerPort: {{ .Values.ports.metrics }}
+          name: http
+          protocol: TCP
+        - containerPort: {{ .Values.ports.healthz }}
+          name: healthz
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: healthz
         resources:
           requests:
             cpu: 100m
@@ -70,5 +54,10 @@ spec:
           limits:
             cpu: 100m
             memory: 220Mi
+      securityContext:
+        fsGroup: 1000
+      serviceAccountName: {{ include "resource.default.name" . }}
+      terminationGracePeriodSeconds: 10
       imagePullSecrets:
       - name: {{ include "resource.pullSecret.name" . }}
+
