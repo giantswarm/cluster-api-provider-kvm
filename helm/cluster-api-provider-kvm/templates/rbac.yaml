@@ -46,6 +46,38 @@ rules:
       - customresourcedefinitions
     verbs:
       - "*"
+  - apiGroups:
+      - ""
+    resources:
+    - events
+    verbs:
+    - create
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+      - "cluster.x-k8s.io"
+    resources:
+    - clusters
+    verbs:
+    - get
+    - list
+    - patch
+    - watch
+  - apiGroups:
+      - "infrastructure.cluster.x-k8s.io"
+    resources:
+    - kvmclusters
+    verbs:
+    - create
+    - update
+    - delete
+    - get
+    - patch
+    - list
+    - watch
   - nonResourceURLs:
       - "/"
       - "/healthz"
