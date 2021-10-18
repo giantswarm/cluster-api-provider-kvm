@@ -6,7 +6,7 @@ require (
 	github.com/giantswarm/microkit v0.2.2
 	github.com/giantswarm/operatorkit/v4 v4.3.1
 	github.com/go-logr/logr v0.4.0
-	github.com/onsi/ginkgo v1.16.4
+	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.13.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.11.0
