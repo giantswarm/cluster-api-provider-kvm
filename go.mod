@@ -3,7 +3,7 @@ module github.com/giantswarm/cluster-api-provider-kvm
 go 1.16
 
 require (
-	github.com/giantswarm/microkit v0.2.2
+	github.com/giantswarm/microkit v1.0.0
 	github.com/giantswarm/operatorkit/v4 v4.3.1
 	github.com/go-logr/logr v0.4.0
 	github.com/onsi/ginkgo v1.16.4
@@ -11,7 +11,6 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.11.0
 	github.com/spf13/pflag v1.0.5
-	github.com/spf13/viper v1.8.1 // indirect
 	k8s.io/apimachinery v0.21.2
 	k8s.io/client-go v0.21.2
 	k8s.io/klog v1.0.0
